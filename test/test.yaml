@@ -1,0 +1,15 @@
+paths:
+  icon_folder: './icon-exclaim'
+  icon4py: './icon4py'
+  gt4py: './gt4py'
+  gridtools: './gridtools'
+icon4py_modules:
+  dycore: 'model/atmosphere/dycore/'
+system:
+  cudaarch: '90'
+  CC: 'mpicc'
+  FC: 'mpif90'
+  CXX: 'mpicxx' 
+ldflags:
+  nvidia: '-lmammamia'
+
