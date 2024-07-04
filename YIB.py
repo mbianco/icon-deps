@@ -42,29 +42,29 @@ def config_and_build():
     subs['CC'] = config['system'].get('CC', 'mpicc')
     subs['cudaarch'] = config['system'].get('cudaarch', '80')
 
-    CMD = '''{icon_folder}/configure \ 
-              CC="{CC}" \ 
-              CFLAGS="-g -O2 {additionalCFLAGS}" \ 
-              CPPFLAGS="-I{uenv_root}/include -I{uenv_root}/include/libxml2" \ 
-              CXX="{CXX}" \ 
-              FC="{FC}" \ 
-              CUDAARCHS="{cudaarch}" \ 
-              NVCFLAGS="-ccbin nvc++ -g -O3 -arch=sm_{cudaarch}" \ 
-              FCFLAGS="-g -traceback -O -Mrecursive -Mallocatable=03 -Mbackslash -Mstack_arrays -acc=verystrict -gpu=cc{cudaarch} -Minfo=accel,inline ${{SERIALBOXI}} ${{ECCODESI}} ${{NETCDFFI}} -D__USE_G2G -D__SWAPDIM" \ 
-              LDFLAGS="-L${uenv_root}/lib64 -L${uenv_root}/lib" \ 
-              DSL_LDFLAGS="-L${uenv_root}/lib64 -L${uenv_root}/lib" \ 
-              LIBS="-lcudart -Wl,--as-needed -lxml2 -llapack -lblas ${{SERIALBOX2_LIBS}} -lc++libs -lnetcdf -lnetcdff -nvmalloc" \ 
-              MPI_LAUNCH=false \ 
-              GT4PYNVCFLAGS="$GT4PYNVCFLAGS" \ 
-              SB2PP="$SB2PP" \ 
-              LOC_GT4PY={gt4py} \ 
-              LOC_ICON4PY_ATM_DYN_ICONAM={icon4py_dycore} \ 
-              LOC_ICON4PY_ADVECTION={icon4py_advection} \ 
-              LOC_ICON4PY_DIFFUSION={icon4py_diffusion} \ 
-              LOC_ICON4PY_INTERPOLATION={icon4py_interpolation} \ 
-              LOC_ICON4PY_TOOLS={icon4py_tools} \ 
-              LOC_ICON4PY_BIN={venv} \ 
-              LOC_GRIDTOOLS={gridtools} \ 
+    CMD = r'''{icon_folder}/configure \
+              CC="{CC}" \
+              CFLAGS="-g -O2 {additionalCFLAGS}" \
+              CPPFLAGS="-I{uenv_root}/include -I{uenv_root}/include/libxml2" \
+              CXX="{CXX}" \
+              FC="{FC}" \
+              CUDAARCHS="{cudaarch}" \
+              NVCFLAGS="-ccbin nvc++ -g -O3 -arch=sm_{cudaarch}" \
+              FCFLAGS="-g -traceback -O -Mrecursive -Mallocatable=03 -Mbackslash -Mstack_arrays -acc=verystrict -gpu=cc{cudaarch} -Minfo=accel,inline ${{SERIALBOXI}} ${{ECCODESI}} ${{NETCDFFI}} -D__USE_G2G -D__SWAPDIM" \
+              LDFLAGS="-L${uenv_root}/lib64 -L${uenv_root}/lib" \
+              DSL_LDFLAGS="-L${uenv_root}/lib64 -L${uenv_root}/lib" \
+              LIBS="-lcudart -Wl,--as-needed -lxml2 -llapack -lblas ${{SERIALBOX2_LIBS}} -lc++libs -lnetcdf -lnetcdff -nvmalloc" \
+              MPI_LAUNCH=false \
+              GT4PYNVCFLAGS="$GT4PYNVCFLAGS" \
+              SB2PP="$SB2PP" \
+              LOC_GT4PY={gt4py} \
+              LOC_ICON4PY_ATM_DYN_ICONAM={icon4py_dycore} \
+              LOC_ICON4PY_ADVECTION={icon4py_advection} \
+              LOC_ICON4PY_DIFFUSION={icon4py_diffusion} \
+              LOC_ICON4PY_INTERPOLATION={icon4py_interpolation} \
+              LOC_ICON4PY_TOOLS={icon4py_tools} \
+              LOC_ICON4PY_BIN={venv} \
+              LOC_GRIDTOOLS={gridtools} \
               ${{EXTRA_CONFIG_ARGS}} --disable-rte-rrtmgp --enable-liskov=substitute --disable-liskov-fused'''.format(**subs)
 
     os.system(CMD)
