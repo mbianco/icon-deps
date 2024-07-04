@@ -1,8 +1,8 @@
 paths:
-  icon_folder: './icon-exclaim'
-  icon4py: './icon4py'
-  gt4py: './gt4py'
-  gridtools: './gridtools'
+  icon_folder: '../icon-exclaim'
+  icon4py: '../icon4py'
+  gt4py: '../gt4py'
+  gridtools: '../gridtools'
 icon4py_modules:
   dycore: 'model/atmosphere/dycore/'
 system:
