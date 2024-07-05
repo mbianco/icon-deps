@@ -1,6 +1,7 @@
 # Python Yaml Icon Build
 
 import yaml
+from jsonschema import validate
 import argparse
 import os
 
@@ -10,7 +11,10 @@ def get_yaml_config(file):
     return config
 
 def config_and_build():
-    uenv_root = os.environ.get('UENV_MOUNT_POINT', 'not_set')
+    uenv_view = os.environ.get('UENV_VIEW', 'not_set').split(':')[2]
+    uenv_root = os.environ.get('UENV_MOUNT_POINT', 'not_set')+'/env/'+uenv_view
+    #print('uenv_view', uenv_view)
+
     parser = argparse.ArgumentParser(description='Takes a YAML file with the configuration of ICON and runs the compilation')
     parser.add_argument('file_name', type=str, help="YAML file containing the parameters for the configuration")
     args = parser.parse_args()
@@ -26,7 +30,7 @@ def config_and_build():
     subs = {'uenv_root':uenv_root, 
             'icon_folder':config['paths'].get('icon_folder', pwd + '/icon-exclaim'),
             'gt4py': config['paths'].get('gt4py', pwd + '/gt4py'),
-            'icon4py': config['paths'].get('icon4py', pwd + 'icon4py'),
+            'icon4py': config['paths'].get('icon4py', pwd + '/icon4py'),
             'gridtools': config['paths'].get('gridtools', pwd + '/gridtools')}
 
     subs['icon4py_dycore'] = config['icon4py_modules'].get('dycore', subs['icon4py'] + '/model/atmosphere/dycore/')
@@ -42,6 +46,8 @@ def config_and_build():
     subs['CC'] = config['system'].get('CC', 'mpicc')
     subs['cudaarch'] = config['system'].get('cudaarch', '80')
 
+    os.system('mpif90 --version; ls -l {uenv_root}; uenv status;'.format(**subs))
+
     CMD = r'''{icon_folder}/configure \
               CC="{CC}" \
               CFLAGS="-g -O2 {additionalCFLAGS}" \
@@ -51,9 +57,9 @@ def config_and_build():
               CUDAARCHS="{cudaarch}" \
               NVCFLAGS="-ccbin nvc++ -g -O3 -arch=sm_{cudaarch}" \
               FCFLAGS="-g -traceback -O -Mrecursive -Mallocatable=03 -Mbackslash -Mstack_arrays -acc=verystrict -gpu=cc{cudaarch} -Minfo=accel,inline ${{SERIALBOXI}} ${{ECCODESI}} ${{NETCDFFI}} -D__USE_G2G -D__SWAPDIM" \
-              LDFLAGS="-L${uenv_root}/lib64 -L${uenv_root}/lib" \
-              DSL_LDFLAGS="-L${uenv_root}/lib64 -L${uenv_root}/lib" \
-              LIBS="-lcudart -Wl,--as-needed -lxml2 -llapack -lblas ${{SERIALBOX2_LIBS}} -lc++libs -lnetcdf -lnetcdff -nvmalloc" \
+              LDFLAGS="-L{uenv_root}/lib64 -L{uenv_root}/lib" \
+              DSL_LDFLAGS="-L{uenv_root}/lib64 -L{uenv_root}/lib" \
+              LIBS="-lcudart -Wl,--as-needed -lxml2 -llapack -lblas ${{SERIALBOX2_LIBS}} -lstdc++ -lnetcdf -lnetcdff -nvmalloc" \
               MPI_LAUNCH=false \
               GT4PYNVCFLAGS="$GT4PYNVCFLAGS" \
               SB2PP="$SB2PP" \
@@ -65,7 +71,9 @@ def config_and_build():
               LOC_ICON4PY_TOOLS={icon4py_tools} \
               LOC_ICON4PY_BIN={venv} \
               LOC_GRIDTOOLS={gridtools} \
-              ${{EXTRA_CONFIG_ARGS}} --disable-rte-rrtmgp --enable-liskov=substitute --disable-liskov-fused'''.format(**subs)
+              --disable-loop-exchange --disable-ocean --enable-gpu=openacc+cuda --disable-rte-rrtmgp --enable-ecrad --disable-rte-rrtmgp --enable-liskov=substitute --disable-liskov-fused
+            make -j2
+            ./make_runscripts --all'''.format(**subs)
 
     os.system(CMD)
 
