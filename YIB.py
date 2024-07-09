@@ -5,25 +5,44 @@ from jsonschema import validate
 import argparse
 import os
 
-def get_yaml_config(file):
+def read_config(file):
     with open(file, 'r') as file:
         config = yaml.safe_load(file)
     return config
 
+def update_general_and_system_flags(flag, config, subs):
+    general = config['general'][flag].format(**subs)
+    system = config['system'][flag].format(**subs)
+
+    subs[flag] = general + ' ' + system
+
+
 def config_and_build():
     uenv_view = os.environ.get('UENV_VIEW', 'not_set').split(':')[2]
+    uenv_image = os.environ.get('UENV_VIEW', 'not_set').split(':')[1]
     uenv_root = os.environ.get('UENV_MOUNT_POINT', 'not_set')+'/env/'+uenv_view
     #print('uenv_view', uenv_view)
 
     parser = argparse.ArgumentParser(description='Takes a YAML file with the configuration of ICON and runs the compilation')
     parser.add_argument('file_name', type=str, help="YAML file containing the parameters for the configuration")
+    parser.add_argument('--conf', action='store_true', help="Ask to not only print the configure command but also run it")
+    parser.add_argument('--make', action='store_true', help="Ask to run the make commands to build the application. It requires --conf to be specified")
     args = parser.parse_args()
+    print("----------------------------------------")
+    print(args)
+    print("----------------------------------------")
+
 
     print('Opening file ', args.file_name)
-    config = get_yaml_config(args.file_name)
-
+    config = read_config(args.file_name)
     print(config)
     print(config['paths'])
+
+    if config['uenv-view'] != uenv_view:
+        print('Warning: the view for which the configuration is done is {0}, while the environment view is {1}'.format(config['uenv-view'], uenv_view))
+
+    if config['uenv-image'] != uenv_image:
+        print('Warning: the image for which the configuration is done is {0}, while the environment view is {1}'.format(config['uenv-image'], uenv_image))
 
     pwd = os.popen('pwd').read()
 
@@ -33,35 +52,48 @@ def config_and_build():
             'icon4py': config['paths'].get('icon4py', pwd + '/icon4py'),
             'gridtools': config['paths'].get('gridtools', pwd + '/gridtools')}
 
-    subs['icon4py_dycore'] = config['icon4py_modules'].get('dycore', subs['icon4py'] + '/model/atmosphere/dycore/')
-    subs['icon4py_advection'] = config['icon4py_modules'].get('advection', subs['icon4py'] + '/model/atmosphere/advection')
-    subs['icon4py_diffusion'] = config['icon4py_modules'].get('diffusion', subs['icon4py'] + '/model/atmosphere/diffusion/stencils')
-    subs['icon4py_interpolation'] = config['icon4py_modules'].get('interpolation', subs['icon4py'] + '/model/common/interpolation/stencils')
-    subs['icon4py_tools'] = config['icon4py_modules'].get('tools', subs['icon4py'] + '/tools/src/icon4pytools')
-    subs['venv'] = config['paths'].get('venv', subs['icon4py'] + '/.venv')
+    subs['icon4py_dycore'] = config['icon4py_modules'].get('dycore', subs['icon4py'] + '/model/atmosphere/dycore/').format(**subs)
+    subs['icon4py_advection'] = config['icon4py_modules'].get('advection', subs['icon4py'] + '/model/atmosphere/advection').format(**subs)
+    subs['icon4py_diffusion'] = config['icon4py_modules'].get('diffusion', subs['icon4py'] + '/model/atmosphere/diffusion/stencils').format(**subs)
+    subs['icon4py_interpolation'] = config['icon4py_modules'].get('interpolation', subs['icon4py'] + '/model/common/interpolation/stencils').format(**subs)
+    subs['icon4py_tools'] = config['icon4py_modules'].get('tools', subs['icon4py'] + '/tools/src/icon4pytools').format(**subs)
+    subs['venv'] = config['paths'].get('venv', subs['icon4py'] + '/.venv').format(**subs)
 
-    subs['additionalCFLAGS'] = config['system'].get('CFLAGS', '')
-    subs['CXX'] = config['system'].get('CXX', 'mpicxx')
-    subs['FC'] = config['system'].get('FC', 'mpif90')
-    subs['CC'] = config['system'].get('CC', 'mpicc')
+    subs['CXX'] = config['paths'].get('CXX', 'mpicxx')
+    subs['FC'] = config['paths'].get('FC', 'mpif90')
+    subs['CC'] = config['paths'].get('CC', 'mpicc')
+
     subs['cudaarch'] = config['system'].get('cudaarch', '80')
+
+    ## Loading general settings
+    update_general_and_system_flags('LIBS', config, subs)
+    update_general_and_system_flags('FCFLAGS', config, subs)
+    update_general_and_system_flags('LDFLAGS', config, subs)
+    update_general_and_system_flags('CFLAGS', config, subs)
+    update_general_and_system_flags('CPPFLAGS', config, subs)
+    update_general_and_system_flags('GT4PYFLAGS', config, subs)
+    update_general_and_system_flags('DSL_LDFLAGS', config, subs)
+    # This is only available in system flags
+    subs['NVCFLAGS'] = config['system']['NVCFLAGS'].format(**subs)
+
+    subs['CONFIGURE_FLAGS'] = config['general']['CONFIGURE_FLAGS'].format(**subs)
 
     os.system('mpif90 --version; ls -l {uenv_root}; uenv status;'.format(**subs))
 
     CMD = r'''{icon_folder}/configure \
+              FCFLAGS="{FCFLAGS}" \
               CC="{CC}" \
-              CFLAGS="-g -O2 {additionalCFLAGS}" \
-              CPPFLAGS="-I{uenv_root}/include -I{uenv_root}/include/libxml2" \
+              CFLAGS="{CFLAGS}" \
+              CPPFLAGS="{CPPFLAGS}" \
               CXX="{CXX}" \
               FC="{FC}" \
               CUDAARCHS="{cudaarch}" \
-              NVCFLAGS="-ccbin nvc++ -g -O3 -arch=sm_{cudaarch}" \
-              FCFLAGS="-g -traceback -O -Mrecursive -Mallocatable=03 -Mbackslash -Mstack_arrays -acc=verystrict -gpu=cc{cudaarch} -Minfo=accel,inline ${{SERIALBOXI}} ${{ECCODESI}} ${{NETCDFFI}} -D__USE_G2G -D__SWAPDIM" \
-              LDFLAGS="-L{uenv_root}/lib64 -L{uenv_root}/lib" \
-              DSL_LDFLAGS="-L{uenv_root}/lib64 -L{uenv_root}/lib" \
-              LIBS="-lcudart -Wl,--as-needed -lxml2 -llapack -lblas ${{SERIALBOX2_LIBS}} -lstdc++ -lnetcdf -lnetcdff -nvmalloc" \
+              NVCFLAGS="{NVCFLAGS}" \
+              LDFLAGS="{LDFLAGS}" \
+              DSL_LDFLAGS="{DSL_LDFLAGS}" \
+              LIBS="{LIBS}" \
               MPI_LAUNCH=false \
-              GT4PYNVCFLAGS="$GT4PYNVCFLAGS" \
+              GT4PYNVCFLAGS="{GT4PYFLAGS}" \
               SB2PP="$SB2PP" \
               LOC_GT4PY={gt4py} \
               LOC_ICON4PY_ATM_DYN_ICONAM={icon4py_dycore} \
@@ -71,12 +103,18 @@ def config_and_build():
               LOC_ICON4PY_TOOLS={icon4py_tools} \
               LOC_ICON4PY_BIN={venv} \
               LOC_GRIDTOOLS={gridtools} \
-              --disable-loop-exchange --disable-ocean --enable-gpu=openacc+cuda --disable-rte-rrtmgp --enable-ecrad --disable-rte-rrtmgp --enable-liskov=substitute --disable-liskov-fused
-            make -j2
+              {CONFIGURE_FLAGS}
+            '''.format(**subs)
+
+    print(CMD)
+    
+    if args.conf:
+        os.system(CMD)
+
+    if args.conf and args.make:
+        CMD_EXEC = r'''make -j2
             ./make_runscripts --all'''.format(**subs)
-
-    os.system(CMD)
-
+    
               #for arg in "$@"; do
               #  case $arg in
               #    -help | --help | --hel | --he | -h | -help=r* | --help=r* | --hel=r* | --he=r* | -hr* | -help=s* | --help=s* | --hel=s* | --he=s* | -hs*)
@@ -96,7 +134,6 @@ def config_and_build():
               #  ln -sf {icon_folder}/vertical_coord_tables
               #fi'''.format(**subs)
 
-    print(CMD)
 
     #os.system('mkdir -p build_substitution4')
     #cmd = '''pushd build_substitution4; 
