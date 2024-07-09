@@ -52,12 +52,12 @@ def config_and_build():
             'icon4py': config['paths'].get('icon4py', pwd + '/icon4py'),
             'gridtools': config['paths'].get('gridtools', pwd + '/gridtools')}
 
-    subs['icon4py_dycore'] = config['icon4py_modules'].get('dycore', subs['icon4py'] + '/model/atmosphere/dycore/').format(**subs)
-    subs['icon4py_advection'] = config['icon4py_modules'].get('advection', subs['icon4py'] + '/model/atmosphere/advection').format(**subs)
-    subs['icon4py_diffusion'] = config['icon4py_modules'].get('diffusion', subs['icon4py'] + '/model/atmosphere/diffusion/stencils').format(**subs)
-    subs['icon4py_interpolation'] = config['icon4py_modules'].get('interpolation', subs['icon4py'] + '/model/common/interpolation/stencils').format(**subs)
-    subs['icon4py_tools'] = config['icon4py_modules'].get('tools', subs['icon4py'] + '/tools/src/icon4pytools').format(**subs)
-    subs['venv'] = config['paths'].get('venv', subs['icon4py'] + '/.venv').format(**subs)
+    subs['icon4py_dycore'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('dycore', '/model/atmosphere/dycore/').format(**subs)
+    subs['icon4py_advection'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('advection', 'model/atmosphere/advection/src/icon4py/model/atmosphere/advection/').format(**subs)
+    subs['icon4py_diffusion'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('diffusion', '/model/atmosphere/diffusion/src/icon4py/model/atmosphere/diffusion/stencils').format(**subs)
+    subs['icon4py_interpolation'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('interpolation', 'model/common/src/icon4py/model/common/interpolation/stencils').format(**subs)
+    subs['icon4py_tools'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('tools', '/tools/src/icon4pytools').format(**subs)
+    subs['venv'] =  config['paths'].get('venv', subs['icon4py'] + '/.venv').format(**subs)
 
     subs['CXX'] = config['paths'].get('CXX', 'mpicxx')
     subs['FC'] = config['paths'].get('FC', 'mpif90')
@@ -114,51 +114,6 @@ def config_and_build():
     if args.conf and args.make:
         CMD_EXEC = r'''make -j2
             ./make_runscripts --all'''.format(**subs)
-    
-              #for arg in "$@"; do
-              #  case $arg in
-              #    -help | --help | --hel | --he | -h | -help=r* | --help=r* | --hel=r* | --he=r* | -hr* | -help=s* | --help=s* | --hel=s* | --he=s* | -hs*)
-              #       test -n "${{EXTRA_CONFIG_ARGS}}" && echo '' && echo "This wrapper script ('$0') calls the configure script with the following extra arguments, which might override the default values listed above: ${{EXTRA_CONFIG_ARGS}}"
-              #       exit 0 ;;
-              #  esac
-              #done
-
-              ## Copy runscript-related files when building out-of-source:
-              #if test $(pwd) != $(cd "{icon_folder}"; pwd); then
-              #  echo "Copying runscript input files from the source directory..."
-              #  rsync -uavz {icon_folder}/run . --exclude='*.in' --exclude='.*' --exclude='standard_*'
-              #  ln -sf -t run/ {icon_folder}/run/standard_*
-              #  rsync -uavz {icon_folder}/externals . --exclude='.git' --exclude='*.f90' --exclude='*.F90' --exclude='*.c' --exclude='*.h' --exclude='*.Po' --exclude='tests' --exclude='*.mod' --exclude='*.o'
-              #  rsync -uavz {icon_folder}/make_runscripts .
-              #  ln -sf {icon_folder}/data
-              #  ln -sf {icon_folder}/vertical_coord_tables
-              #fi'''.format(**subs)
-
-
-    #os.system('mkdir -p build_substitution4')
-    #cmd = '''pushd build_substitution4; 
-    #    NETCDFMINFORTRAN={uenv_root} 
-    #    NETCDF={uenv_root} 
-    #    XML2_ROOT={uenv_root} 
-    #    LOC_GT4PY={gt4py} 
-    #    LOC_ICON4PY_ATM_DYN_ICONAM={icon4py_dycore} 
-    #    LOC_ICON4PY_ADVECTION={icon4py_advection}
-    #    LOC_ICON4PY_DIFFUSION={icon4py_diffusion}
-    #    LOC_ICON4PY_INTERPOLATION={icon4py_interpolation}
-    #    LOC_ICON4PY_TOOLS={icon4py_tools}
-    #    LOC_ICON4PY_BIN={venv}
-    #    LOC_GRIDTOOLS={gridtools}
-    #    ../{icon_folder}/config/cscs/santis_nospack.dsl.nvidia_v4 --disable-rte-rrtmgp --enable-liskov=substitute --disable-liskov-fused
-    #
-    #    #make
-    #    make -j20
-    #    ./make_runscripts --all
-    #    #pushd run
-    #    #    sbatch exp.exclaim_ape_R02B05_alpsbench.run
-    #    #popd
-    #popd'''.format(**subs)
-    #print(cmd)
-    #os.system(cmd)
 
 if __name__=='__main__':
     config_and_build()
