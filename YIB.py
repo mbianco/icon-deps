@@ -28,10 +28,6 @@ def config_and_build():
     parser.add_argument('--conf', action='store_true', help="Ask to not only print the configure command but also run it")
     parser.add_argument('--make', action='store_true', help="Ask to run the make commands to build the application. It requires --conf to be specified")
     args = parser.parse_args()
-    print("----------------------------------------")
-    print(args)
-    print("----------------------------------------")
-
 
     print('Opening file ', args.file_name)
     config = read_config(args.file_name)
@@ -44,19 +40,21 @@ def config_and_build():
     if config['uenv-image'] != uenv_image:
         print('Warning: the image for which the configuration is done is {0}, while the environment view is {1}'.format(config['uenv-image'], uenv_image))
 
-    pwd = os.popen('pwd').read()
-
+    pwd = os.popen('pwd').read()l
+    print('------------------------------------------')
+    print(pwd)
+    print('------------------------------------------')
     subs = {'uenv_root':uenv_root, 
             'icon_folder':config['paths'].get('icon_folder', pwd + '/icon-exclaim'),
             'gt4py': config['paths'].get('gt4py', pwd + '/gt4py'),
             'icon4py': config['paths'].get('icon4py', pwd + '/icon4py'),
             'gridtools': config['paths'].get('gridtools', pwd + '/gridtools')}
 
-    subs['icon4py_dycore'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('dycore', '/model/atmosphere/dycore/').format(**subs)
-    subs['icon4py_advection'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('advection', 'model/atmosphere/advection/src/icon4py/model/atmosphere/advection/').format(**subs)
-    subs['icon4py_diffusion'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('diffusion', '/model/atmosphere/diffusion/src/icon4py/model/atmosphere/diffusion/stencils').format(**subs)
-    subs['icon4py_interpolation'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('interpolation', 'model/common/src/icon4py/model/common/interpolation/stencils').format(**subs)
-    subs['icon4py_tools'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('tools', '/tools/src/icon4pytools').format(**subs)
+    subs['icon4py_dycore'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('dycore', 'DEFAULTmodel/atmosphere/dycore/src/icon4py/model/atmosphere/dycore/').format(**subs)
+    subs['icon4py_advection'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('advection', 'DEFAULTmodel/atmosphere/advection/src/icon4py/model/atmosphere/advection/').format(**subs)
+    subs['icon4py_diffusion'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('diffusion', 'DEFAULT/model/atmosphere/diffusion/src/icon4py/model/atmosphere/diffusion/stencils').format(**subs)
+    subs['icon4py_interpolation'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('interpolation', 'DEFAULT/model/common/src/icon4py/model/common/interpolation/stencils').format(**subs)
+    subs['icon4py_tools'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('tools', 'DEFAULT/tools/src/icon4pytools').format(**subs)
     subs['venv'] =  config['paths'].get('venv', subs['icon4py'] + '/.venv').format(**subs)
 
     subs['CXX'] = config['paths'].get('CXX', 'mpicxx')
@@ -87,12 +85,11 @@ def config_and_build():
               CPPFLAGS="{CPPFLAGS}" \
               CXX="{CXX}" \
               FC="{FC}" \
-              CUDAARCHS="{cudaarch}" \
               NVCFLAGS="{NVCFLAGS}" \
               LDFLAGS="{LDFLAGS}" \
               DSL_LDFLAGS="{DSL_LDFLAGS}" \
               LIBS="{LIBS}" \
-              MPI_LAUNCH=false \
+              MPI_LAUNCH=true \
               GT4PYNVCFLAGS="{GT4PYFLAGS}" \
               SB2PP="$SB2PP" \
               LOC_GT4PY={gt4py} \

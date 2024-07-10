@@ -1,15 +1,38 @@
+uenv-view: 'icon'
+uenv-image: 'icon-wcp'
+ 
 paths:
-  icon_folder: '../icon-exclaim'
-  icon4py: '../icon4py'
-  gt4py: '../gt4py'
-  gridtools: '../gridtools'
-icon4py_modules:
-  dycore: 'model/atmosphere/dycore/'
-system:
-  cudaarch: '90'
+  icon_folder: '/capstor/scratch/cscs/mbianco/playground/icon-exclaim'
+  icon4py: '/capstor/scratch/cscs/mbianco/playground/icon4py'
+  gt4py: '/capstor/scratch/cscs/mbianco/playground/gt4py'
+  gridtools: '/capstor/scratch/cscs/mbianco/playground/gridtools'
   CC: 'mpicc'
   FC: 'mpif90'
   CXX: 'mpicxx' 
-ldflags:
-  nvidia: '-lmammamia'
+icon4py_modules:
+  # Relative paths to icon4py path above
+  dycore: 'model/atmosphere/dycore/src/icon4py/model/atmosphere/dycore/'
+  diffusion: 'model/atmosphere/diffusion/src/icon4py/model/atmosphere/diffusion/stencils'
+  advection: 'model/atmosphere/advection/src/icon4py/model/atmosphere/advection/'
+  interpolation: 'model/common/src/icon4py/model/common/interpolation/stencils'
+  tools: 'tools/src/icon4pytools'
+general:
+  CONFIGURE_FLAGS: "--disable-emvorado --disable-loop-exchange --disable-ocean --enable-gpu=openacc+cuda --disable-rte-rrtmgp --enable-ecrad --disable-rte-rrtmgp --enable-liskov=substitute --disable-liskov-fused"
+  LIBS: '-Wl,--as-needed -lxml2 -llapack -lblas ${{SERIALBOX2_LIBS}} -lstdc++ -lnetcdf -lnetcdff'
+  LDFLAGS: '-L/user-environment/env/icon/lib64 -L/user-environment/env/icon/lib'
+  FCFLAGS: '-g -traceback -O -Mrecursive -Mallocatable=03 -Mbackslash -Mstack_arrays ${{SERIALBOXI}} ${{ECCODESI}} ${{NETCDFFI}} -D__SWAPDIM -I/user-environment/env/icon/include'
+  CFLAGS: '-g -O2'
+  CPPFLAGS: '-I/user-environment/env/icon/include -I/user-environment/env/icon/include/libxml2' 
+  GT4PYFLAGS: ''
+  DSL_LDFLAGS: '-L/user-environment/env/icon/lib64 -L/user-environment/env/icon/lib'
+system:
+  cudaarch: '90'
+  NVCFLAGS: '-ccbin nvc++ -g -O3 -arch=sm_{cudaarch}'
+  LIBS: '-lcudart -nvmalloc'
+  LDFLAGS: ''
+  FCFLAGS: '-D__USE_G2G -gpu=cc{cudaarch} -acc=verystrict -Minfo=accel,inline'
+  CFLAGS: ''
+  CPPFLAGS: '' 
+  GT4PYFLAGS: ''
+  DSL_LDFLAGS: ''
 
