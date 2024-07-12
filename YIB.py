@@ -40,7 +40,7 @@ def config_and_build():
     if config['uenv-image'] != uenv_image:
         print('Warning: the image for which the configuration is done is {0}, while the environment view is {1}'.format(config['uenv-image'], uenv_image))
 
-    pwd = os.popen('pwd').read()l
+    pwd = os.popen('pwd').read()
     print('------------------------------------------')
     print(pwd)
     print('------------------------------------------')
