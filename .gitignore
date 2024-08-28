@@ -1,0 +1,6 @@
+build/
+icon-exclaim/
+icon4py/
+spack/
+*log
+*txt

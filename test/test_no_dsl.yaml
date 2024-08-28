@@ -18,7 +18,7 @@ icon4py_modules:
   interpolation: 'model/common/src/icon4py/model/common/interpolation/stencils'
   tools: 'tools/src/icon4pytools'
 general:
-  CONFIGURE_FLAGS: "--disable-emvorado --disable-loop-exchange --disable-ocean --enable-gpu=openacc+cuda --disable-rte-rrtmgp --enable-ecrad --disable-rte-rrtmgp --disable-yac --disable-coupled --disable-mpi-checks"
+  CONFIGURE_FLAGS: '--disable-emvorado --disable-loop-exchange --disable-ocean --enable-gpu=openacc+cuda --disable-rte-rrtmgp --enable-ecrad --disable-rte-rrtmgp --disable-coupling --disable-mpi-checks --disable-yaxt'
   LIBS: '-Wl,--as-needed -lxml2 -llapack -lblas ${{SERIALBOX2_LIBS}} -lstdc++ -lnetcdf -lnetcdff'
   LDFLAGS: '-L/user-environment/env/icon/lib64 -L/user-environment/env/icon/lib'
   FCFLAGS: '-g -traceback -O -Mrecursive -Mallocatable=03 -Mbackslash -Mstack_arrays ${{SERIALBOXI}} ${{ECCODESI}} ${{NETCDFFI}} -D__SWAPDIM -I/user-environment/env/icon/include'

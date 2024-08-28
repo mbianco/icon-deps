@@ -87,8 +87,8 @@ gt4py_url="git@github.com:${gt4py_org}/gt4py.git"
 gridtools_url="git@github.com:${gridtools_org}/gridtools.git"
 
 # Clone with specific branches
-git clone -b $icon_branch $icon_url
-git clone -b $icon4py_branch $icon4py_url
+#git clone -b $icon_branch $icon_url
+#git clone -b $icon4py_branch $icon4py_url
 
 export CXX=`which g++`
 g++ --version
@@ -98,8 +98,14 @@ gcc --version
 pushd icon4py
     python3.10 -m venv .venv
     source .venv/bin/activate
+    export CPATH=/user-environment/env/icon/include
+    export C_INCLUDE_PATH=/user-environment/env/icon/include
+    export CPLUS_INCLUDE_PATH=/user-environment/env/icon/include
     pip install --upgrade wheel pip
-    pip install -r requirements-dev.txt
+    pip cache purge
+    pip install --global-option="-I/user-environment/env/icon/include/" h5py
+    pip install  -r requirements-dev.txt
+    #pip install --config-settings='--build-option="-I/user-environment/env/icon/include/"' -r requirements-dev.txt
 popd
 
 
