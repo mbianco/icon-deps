@@ -85,6 +85,7 @@ def config_and_build():
               CPPFLAGS="{CPPFLAGS}" \
               CXX="{CXX}" \
               FC="{FC}" \
+              CUDAARCH="{cudaarch}" \
               NVCFLAGS="{NVCFLAGS}" \
               LDFLAGS="{LDFLAGS}" \
               DSL_LDFLAGS="{DSL_LDFLAGS}" \
@@ -109,8 +110,8 @@ def config_and_build():
         os.system(CMD)
 
     if args.conf and args.make:
-        CMD_EXEC = r'''make -j2
-            ./make_runscripts --all'''.format(**subs)
+        CMD_EXEC = r'''make -j2'''.format(**subs)
+        os.system(CMD_EXEC)
 
 if __name__=='__main__':
     config_and_build()
