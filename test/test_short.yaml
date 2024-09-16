@@ -5,8 +5,6 @@ paths:
   common_prefix: '/capstor/scratch/cscs/mbianco/playground/icon-deps/' # This will be prepended to all the paths in this section (optional)
   icon_folder: 'icon-exclaim'
   icon4py: 'icon4py'
-  gt4py: 'icon4py/tools/.venv/lib/python3.10/site-packages/gt4py/data'
-  gridtools_cpp: 'icon4py/tools/.venv/lib/python3.10/site-packages/gridtools_cpp/data'
   venv: 'icon4py/tools/.venv'
 
 compilers:

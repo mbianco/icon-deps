@@ -5,11 +5,14 @@ paths:
   icon_folder: '/capstor/scratch/cscs/mbianco/playground/icon-deps/icon-exclaim'
   icon4py: '/capstor/scratch/cscs/mbianco/playground/icon-deps/icon4py'
   gt4py: '/capstor/scratch/cscs/mbianco/playground/icon-deps/icon4py/tools/.venv/lib/python3.10/site-packages/gt4py/data'
-  gridtools: '/capstor/scratch/cscs/mbianco/playground/icon-deps/icon4py/tools/.venv/lib/python3.10/site-packages/gridtools_cpp/data'
+  gridtools_cpp: '/capstor/scratch/cscs/mbianco/playground/icon-deps/icon4py/tools/.venv/lib/python3.10/site-packages/gridtools_cpp/data'
   venv: '/capstor/scratch/cscs/mbianco/playground/icon-deps/icon4py/tools'
+
+compilers:
   CC: 'mpicc'
   FC: 'mpif90'
-  CXX: 'mpicxx' 
+  CXX: 'mpicxx'
+ 
 icon4py_modules:
   # Relative paths to icon4py path above
   dycore: 'model/atmosphere/dycore/src/icon4py/model/atmosphere/dycore/'
@@ -18,7 +21,7 @@ icon4py_modules:
   interpolation: 'model/common/src/icon4py/model/common/interpolation/stencils'
   tools: 'tools/src/icon4pytools'
 general:
-  CONFIGURE_FLAGS: '--disable-emvorado --disable-loop-exchange --disable-ocean --enable-gpu=openacc+cuda --disable-rte-rrtmgp --enable-ecrad --disable-rte-rrtmgp --disable-coupling --disable-mpi-checks --disable-yaxt'
+  CONFIGURE_FLAGS: '--disable-emvorado --disable-loop-exchange --disable-ocean --disable-rte-rrtmgp --enable-ecrad --disable-rte-rrtmgp --disable-coupling --disable-mpi-checks --disable-yaxt'
   LIBS: '-Wl,--as-needed -lxml2 -llapack -lblas ${{SERIALBOX2_LIBS}} -lstdc++ -lnetcdf -lnetcdff'
   LDFLAGS: '-L/user-environment/env/icon/lib64 -L/user-environment/env/icon/lib'
   FCFLAGS: '-g -traceback -O -Mrecursive -Mallocatable=03 -Mbackslash -Mstack_arrays ${{SERIALBOXI}} ${{ECCODESI}} ${{NETCDFFI}} -D__SWAPDIM -I/user-environment/env/icon/include'
@@ -27,6 +30,7 @@ general:
   GT4PYFLAGS: ''
   DSL_LDFLAGS: '-L/user-environment/env/icon/lib64 -L/user-environment/env/icon/lib'
 system:
+  CONFIGURE_FLAGS: '--enable-gpu=openacc+cuda'
   cudaarch: '90'
   NVCFLAGS: '-ccbin nvc++ -g -O3 -arch=sm_{cudaarch}'
   LIBS: '-lcudart -nvmalloc'

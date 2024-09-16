@@ -4,6 +4,7 @@ import yaml
 from jsonschema import validate
 import argparse
 import os
+import importlib.util
 
 def read_config(file):
     with open(file, 'r') as file:
@@ -16,6 +17,23 @@ def update_general_and_system_flags(flag, config, subs):
 
     subs[flag] = general + ' ' + system
 
+def check_package_path(package, config, subs):
+    print("Looking for " + package + "...")
+    common_prefix = config['paths'].get('common_prefix', '')
+    package_from_config = config['paths'].get(package, "")
+    if package_from_config == "":
+
+        spec = importlib.util.find_spec(package)
+        if spec is not None:
+            package_from_config = os.path.join(os.path.dirname(spec.origin), 'data')
+            print(package + " found automatically @ " + package_from_config)
+        else:
+            raise Exception(package + " not found, please check your configuraiton file")
+    else:
+        # Get a full path
+        package_from_config = os.path.join(common_prefix, package_from_config)
+
+    subs[package] = package_from_config
 
 def config_and_build():
     uenv_view = os.environ.get('UENV_VIEW', 'not_set').split(':')[2]
@@ -31,8 +49,6 @@ def config_and_build():
 
     print('Opening file ', args.file_name)
     config = read_config(args.file_name)
-    print(config)
-    print(config['paths'])
 
     if config['uenv-view'] != uenv_view:
         print('Warning: the view for which the configuration is done is {0}, while the environment view is {1}'.format(config['uenv-view'], uenv_view))
@@ -41,25 +57,26 @@ def config_and_build():
         print('Warning: the image for which the configuration is done is {0}, while the environment view is {1}'.format(config['uenv-image'], uenv_image))
 
     pwd = os.popen('pwd').read()
-    print('------------------------------------------')
-    print(pwd)
-    print('------------------------------------------')
+    common_prefix = config['paths'].get('common_prefix', '')
     subs = {'uenv_root':uenv_root, 
-            'icon_folder':config['paths'].get('icon_folder', pwd + '/icon-exclaim'),
-            'gt4py': config['paths'].get('gt4py', pwd + '/gt4py'),
-            'icon4py': config['paths'].get('icon4py', pwd + '/icon4py'),
-            'gridtools': config['paths'].get('gridtools', pwd + '/gridtools')}
+            'icon_folder': os.path.join(common_prefix, config['paths'].get('icon_folder', pwd + '/icon-exclaim'))
+    }
 
-    subs['icon4py_dycore'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('dycore', 'DEFAULTmodel/atmosphere/dycore/src/icon4py/model/atmosphere/dycore/').format(**subs)
-    subs['icon4py_advection'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('advection', 'DEFAULTmodel/atmosphere/advection/src/icon4py/model/atmosphere/advection/').format(**subs)
-    subs['icon4py_diffusion'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('diffusion', 'DEFAULT/model/atmosphere/diffusion/src/icon4py/model/atmosphere/diffusion/stencils').format(**subs)
-    subs['icon4py_interpolation'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('interpolation', 'DEFAULT/model/common/src/icon4py/model/common/interpolation/stencils').format(**subs)
-    subs['icon4py_tools'] =  subs['icon4py'] + '/' + config['icon4py_modules'].get('tools', 'DEFAULT/tools/src/icon4pytools').format(**subs)
-    subs['venv'] =  config['paths'].get('venv', subs['icon4py'] + '/.venv').format(**subs)
 
-    subs['CXX'] = config['paths'].get('CXX', 'mpicxx')
-    subs['FC'] = config['paths'].get('FC', 'mpif90')
-    subs['CC'] = config['paths'].get('CC', 'mpicc')
+    check_package_path('icon4py', config, subs)
+    check_package_path('gt4py', config, subs)
+    check_package_path('gridtools_cpp', config, subs)
+
+    subs['icon4py_dycore'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('dycore', 'DEFAULTmodel/atmosphere/dycore/src/icon4py/model/atmosphere/dycore/').format(**subs))
+    subs['icon4py_advection'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('advection', 'DEFAULTmodel/atmosphere/advection/src/icon4py/model/atmosphere/advection/').format(**subs))
+    subs['icon4py_diffusion'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('diffusion', 'DEFAULT/model/atmosphere/diffusion/src/icon4py/model/atmosphere/diffusion/stencils').format(**subs))
+    subs['icon4py_interpolation'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('interpolation', 'DEFAULT/model/common/src/icon4py/model/common/interpolation/stencils').format(**subs))
+    subs['icon4py_tools'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('tools', 'DEFAULT/tools/src/icon4pytools').format(**subs))
+    subs['venv'] =  os.path.join(subs['icon4py'], config['paths'].get('venv', subs['icon4py'] + '/.venv').format(**subs))
+
+    subs['CXX'] = config['compilers'].get('CXX', 'mpicxx')
+    subs['FC'] = config['compilers'].get('FC', 'mpif90')
+    subs['CC'] = config['compilers'].get('CC', 'mpicc')
 
     subs['cudaarch'] = config['system'].get('cudaarch', '80')
 
@@ -71,12 +88,10 @@ def config_and_build():
     update_general_and_system_flags('CPPFLAGS', config, subs)
     update_general_and_system_flags('GT4PYFLAGS', config, subs)
     update_general_and_system_flags('DSL_LDFLAGS', config, subs)
+    update_general_and_system_flags('CONFIGURE_FLAGS', config, subs)
+
     # This is only available in system flags
     subs['NVCFLAGS'] = config['system']['NVCFLAGS'].format(**subs)
-
-    subs['CONFIGURE_FLAGS'] = config['general']['CONFIGURE_FLAGS'].format(**subs)
-
-    os.system('mpif90 --version; ls -l {uenv_root}; uenv status;'.format(**subs))
 
     CMD = r'''{icon_folder}/configure \
               FCFLAGS="{FCFLAGS}" \
@@ -100,7 +115,7 @@ def config_and_build():
               LOC_ICON4PY_INTERPOLATION={icon4py_interpolation} \
               LOC_ICON4PY_TOOLS={icon4py_tools} \
               LOC_ICON4PY_BIN={venv} \
-              LOC_GRIDTOOLS={gridtools} \
+              LOC_GRIDTOOLS={gridtools_cpp} \
               {CONFIGURE_FLAGS}
             '''.format(**subs)
 
