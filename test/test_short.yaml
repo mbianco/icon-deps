@@ -5,7 +5,7 @@ paths:
   common_prefix: '/capstor/scratch/cscs/mbianco/playground/icon-deps/' # This will be prepended to all the paths in this section (optional)
   icon_folder: 'icon-exclaim'
   icon4py: 'icon4py'
-  venv: 'icon4py/tools/.venv'
+  venv: '.venv'
 
 compilers:
   CC: 'mpicc'
@@ -20,7 +20,7 @@ icon4py_modules:
   interpolation: 'model/common/src/icon4py/model/common/interpolation/stencils'
   tools: 'tools/src/icon4pytools'
 general:
-  CONFIGURE_FLAGS: "--disable-emvorado --disable-loop-exchange --disable-ocean --disable-rte-rrtmgp --enable-ecrad --disable-rte-rrtmgp  --enable-liskov=substitute --disable-liskov-fused"
+  CONFIGURE_FLAGS: "--disable-emvorado --disable-loop-exchange --disable-ocean --disable-rte-rrtmgp --enable-ecrad --disable-rte-rrtmgp  --enable-liskov=substitute --disable-liskov-fused --disable-mpi-checks --with-external-yaxt=no --with-external-yac=no"
   LIBS: '-Wl,--as-needed -lxml2 -llapack -lblas ${{SERIALBOX2_LIBS}} -lstdc++ -lnetcdf -lnetcdff'
   LDFLAGS: '-L/user-environment/env/icon/lib64 -L/user-environment/env/icon/lib'
   FCFLAGS: '-g -traceback -O -Mrecursive -Mallocatable=03 -Mbackslash -Mstack_arrays ${{SERIALBOXI}} ${{ECCODESI}} ${{NETCDFFI}} -D__SWAPDIM -I/user-environment/env/icon/include'
@@ -29,12 +29,12 @@ general:
   GT4PYFLAGS: ''
   DSL_LDFLAGS: '-L/user-environment/env/icon/lib64 -L/user-environment/env/icon/lib'
 system:
-  CONFIGURE_FLAGS: '--enable-gpu=openacc+cuda'
+  CONFIGURE_FLAGS: '--enable-gpu=openacc+cuda --enable-gpu --enable-mpi-gpu --enable-realloc-buf'
   cudaarch: '90'
-  NVCFLAGS: '-ccbin nvc++ -g -O3 -arch=sm_{cudaarch}'
+  NVCFLAGS: '--std=c++17 -arch=sm_90 -g -O3 -lineinfo -ccbin nvc++'
   LIBS: '-lcudart -nvmalloc'
   LDFLAGS: ''
-  FCFLAGS: '-D__USE_G2G -gpu=cc{cudaarch} -acc=verystrict -Minfo=accel,inline'
+  FCFLAGS: '-acc=verystrict -Minfo=accel,inline -D__USE_G2G -lnvToolsExt'
   CFLAGS: ''
   CPPFLAGS: '' 
   GT4PYFLAGS: ''
