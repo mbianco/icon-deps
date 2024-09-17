@@ -17,9 +17,8 @@ def update_general_and_system_flags(flag, config, subs):
 
     subs[flag] = general + ' ' + system
 
-def check_package_path(package, config, subs):
+def check_package_path(package, config, subs, common_prefix):
     print("Looking for " + package + "...")
-    common_prefix = config['paths'].get('common_prefix', '')
     package_from_config = config['paths'].get(package, "")
     if package_from_config == "":
 
@@ -37,6 +36,9 @@ def check_package_path(package, config, subs):
 
 def config_and_build():
     uenv_view = os.environ.get('UENV_VIEW', 'not_set').split(':')[2]
+    venv_path = os.environ.get('VIRTUAL_ENV', 'not_set')
+    if venv_path == 'not_set':
+        raise("ERROR: It is required to run these procedure from within a virtual environment")
     uenv_image = os.environ.get('UENV_VIEW', 'not_set').split(':')[1]
     uenv_root = os.environ.get('UENV_MOUNT_POINT', 'not_set')+'/env/'+uenv_view
     #print('uenv_view', uenv_view)
@@ -45,6 +47,7 @@ def config_and_build():
     parser.add_argument('file_name', type=str, help="YAML file containing the parameters for the configuration")
     parser.add_argument('--conf', action='store_true', help="Ask to not only print the configure command but also run it")
     parser.add_argument('--make', action='store_true', help="Ask to run the make commands to build the application. It requires --conf to be specified")
+    parser.add_argument('--prefix', help="Common prefix where all the relative paths in the 'paths' section of the yaml configuraiton file refers to. If left blank those paths will be considered as absolute")
     args = parser.parse_args()
 
     print('Opening file ', args.file_name)
@@ -57,22 +60,22 @@ def config_and_build():
         print('Warning: the image for which the configuration is done is {0}, while the environment view is {1}'.format(config['uenv-image'], uenv_image))
 
     pwd = os.popen('pwd').read()
-    common_prefix = config['paths'].get('common_prefix', '')
+    common_prefix = args.prefix
+
     subs = {'uenv_root':uenv_root, 
             'icon_folder': os.path.join(common_prefix, config['paths'].get('icon_folder', pwd + '/icon-exclaim'))
     }
 
-
-    check_package_path('icon4py', config, subs)
-    check_package_path('gt4py', config, subs)
-    check_package_path('gridtools_cpp', config, subs)
+    check_package_path('icon4py', config, subs, common_prefix)
+    check_package_path('gt4py', config, subs, common_prefix)
+    check_package_path('gridtools_cpp', config, subs, common_prefix)
 
     subs['icon4py_dycore'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('dycore', 'DEFAULTmodel/atmosphere/dycore/src/icon4py/model/atmosphere/dycore/').format(**subs))
     subs['icon4py_advection'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('advection', 'DEFAULTmodel/atmosphere/advection/src/icon4py/model/atmosphere/advection/').format(**subs))
     subs['icon4py_diffusion'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('diffusion', 'DEFAULT/model/atmosphere/diffusion/src/icon4py/model/atmosphere/diffusion/stencils').format(**subs))
     subs['icon4py_interpolation'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('interpolation', 'DEFAULT/model/common/src/icon4py/model/common/interpolation/stencils').format(**subs))
     subs['icon4py_tools'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('tools', 'DEFAULT/tools/src/icon4pytools').format(**subs))
-    subs['venv'] =  os.path.join(subs['icon4py'], config['paths'].get('venv', subs['icon4py'] + '/.venv').format(**subs))
+    subs['venv'] = venv_path
 
     subs['CXX'] = config['compilers'].get('CXX', 'mpicxx')
     subs['FC'] = config['compilers'].get('FC', 'mpif90')
@@ -116,7 +119,7 @@ def config_and_build():
               LOC_ICON4PY_TOOLS={icon4py_tools} \
               LOC_ICON4PY_BIN={venv} \
               LOC_GRIDTOOLS={gridtools_cpp} \
-              {CONFIGURE_FLAGS}
+              {CONFIGURE_FLAGS} 
             '''.format(**subs)
 
     print(CMD)
@@ -125,9 +128,8 @@ def config_and_build():
         os.system(CMD)
 
     if args.conf and args.make:
-        CMD_EXEC = r'''make -j2'''.format(**subs)
+        CMD_EXEC = r'''make -j4'''.format(**subs)
         os.system(CMD_EXEC)
 
 if __name__=='__main__':
     config_and_build()
-
