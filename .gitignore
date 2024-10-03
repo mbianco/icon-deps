@@ -2,5 +2,6 @@ build/
 icon-exclaim/
 icon4py/
 spack/
+.venv/
 *log
 *txt
