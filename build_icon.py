@@ -11,11 +11,18 @@ def read_config(file):
         config = yaml.safe_load(file)
     return config
 
-def update_general_and_system_flags(flag, config, subs):
-    general = config['general'][flag].format(**subs)
-    system = config['system'][flag].format(**subs)
+class update_general_and_system_flags:
+    def __init__(self, config, ma_config):
+        self._config = config['build-config']
+        self._ma_config = ma_config['build-config']
+        print(self._ma_config)
+        print(self._config)
 
-    subs[flag] = general + ' ' + system
+    def update(self, flag, subs):
+        general = self._config[flag].format(**subs)
+        system = self._ma_config[flag].format(**subs)
+
+        subs[flag] = general + ' ' + system
 
 def check_package_path(package, config, subs, common_prefix):
     print("Looking for " + package + "...")
@@ -45,6 +52,7 @@ def config_and_build():
 
     parser = argparse.ArgumentParser(description='Takes a YAML file with the configuration of ICON and runs the compilation')
     parser.add_argument('file_name', type=str, help="YAML file containing the parameters for the configuration")
+    parser.add_argument('--micro', type=str, help="YAML file containing the parameters for microarchitecture specific flags")
     parser.add_argument('--conf', action='store_true', help="Ask to not only print the configure command but also run it")
     parser.add_argument('--make', action='store_true', help="Ask to run the make commands to build the application. It requires --conf to be specified")
     parser.add_argument('--prefix', help="Common prefix where all the relative paths in the 'paths' section of the yaml configuraiton file refers to. If left blank those paths will be considered as absolute")
@@ -53,11 +61,22 @@ def config_and_build():
     print('Opening file ', args.file_name)
     config = read_config(args.file_name)
 
-    if config['uenv-view'] != uenv_view:
+    print('Opening microarchitecture file ', args.micro)
+    ma_config = read_config(args.micro)
+
+    if config['uenv']['view'] != uenv_view:
         print('Warning: the view for which the configuration is done is {0}, while the environment view is {1}'.format(config['uenv-view'], uenv_view))
 
-    if config['uenv-image'] != uenv_image:
+    if config['uenv']['image'] != uenv_image:
         print('Warning: the image for which the configuration is done is {0}, while the environment view is {1}'.format(config['uenv-image'], uenv_image))
+
+    if ma_config['uenv']['view'] != uenv_view:
+        print('Warning: the view for which the configuration is done is {0}, while the environment view is {1}'.format(config['uenv-view'], uenv_view))
+
+    if ma_config['uenv']['image'] != uenv_image:
+        print('Warning: the image for which the configuration is done is {0}, while the environment view is {1}'.format(config['uenv-image'], uenv_image))
+
+    ma_target = config['target']
 
     pwd = os.popen('pwd').read()
     common_prefix = args.prefix
@@ -70,31 +89,32 @@ def config_and_build():
     check_package_path('gt4py', config, subs, common_prefix)
     check_package_path('gridtools_cpp', config, subs, common_prefix)
 
-    subs['icon4py_dycore'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('dycore', 'DEFAULTmodel/atmosphere/dycore/src/icon4py/model/atmosphere/dycore/').format(**subs))
-    subs['icon4py_advection'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('advection', 'DEFAULTmodel/atmosphere/advection/src/icon4py/model/atmosphere/advection/').format(**subs))
-    subs['icon4py_diffusion'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('diffusion', 'DEFAULT/model/atmosphere/diffusion/src/icon4py/model/atmosphere/diffusion/stencils').format(**subs))
-    subs['icon4py_interpolation'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('interpolation', 'DEFAULT/model/common/src/icon4py/model/common/interpolation/stencils').format(**subs))
-    subs['icon4py_tools'] =  os.path.join(subs['icon4py'], config['icon4py_modules'].get('tools', 'DEFAULT/tools/src/icon4pytools').format(**subs))
+    subs['icon4py_dycore'] =  os.path.join(subs['icon4py'], 'model/atmosphere/dycore/src/icon4py/model/atmosphere/dycore/')
+    subs['icon4py_advection'] =  os.path.join(subs['icon4py'], 'model/atmosphere/diffusion/src/icon4py/model/atmosphere/diffusion/stencils')
+    subs['icon4py_diffusion'] =  os.path.join(subs['icon4py'], 'model/atmosphere/advection/src/icon4py/model/atmosphere/advection/')
+    subs['icon4py_interpolation'] =  os.path.join(subs['icon4py'], 'model/common/src/icon4py/model/common/interpolation/stencils')
+    subs['icon4py_tools'] =  os.path.join(subs['icon4py'], 'tools/src/icon4pytools')
     subs['venv'] = venv_path
 
-    subs['CXX'] = config['compilers'].get('CXX', 'mpicxx')
-    subs['FC'] = config['compilers'].get('FC', 'mpif90')
-    subs['CC'] = config['compilers'].get('CC', 'mpicc')
+    subs['CXX'] = ma_config[ma_target]['compilers'].get('CXX', 'mpicxx')
+    subs['FC'] = ma_config[ma_target]['compilers'].get('FC', 'mpif90')
+    subs['CC'] = ma_config[ma_target]['compilers'].get('CC', 'mpicc')
 
-    subs['cudaarch'] = config['system'].get('cudaarch', '80')
+    subs['cudaarch'] = ma_config[ma_target].get('cudaarch', '80')
 
     ## Loading general settings
-    update_general_and_system_flags('LIBS', config, subs)
-    update_general_and_system_flags('FCFLAGS', config, subs)
-    update_general_and_system_flags('LDFLAGS', config, subs)
-    update_general_and_system_flags('CFLAGS', config, subs)
-    update_general_and_system_flags('CPPFLAGS', config, subs)
-    update_general_and_system_flags('GT4PYFLAGS', config, subs)
-    update_general_and_system_flags('DSL_LDFLAGS', config, subs)
-    update_general_and_system_flags('CONFIGURE_FLAGS', config, subs)
+    ugsf = update_general_and_system_flags(config, ma_config[ma_target])
+    ugsf.update('CONFIGURE_FLAGS', subs)
+    ugsf.update('LIBS', subs)
+    ugsf.update('FCFLAGS', subs)
+    ugsf.update('LDFLAGS', subs)
+    ugsf.update('CFLAGS', subs)
+    ugsf.update('CPPFLAGS', subs)
+    ugsf.update('GT4PYFLAGS', subs)
+    ugsf.update('DSL_LDFLAGS', subs)
 
     # This is only available in system flags
-    subs['NVCFLAGS'] = config['system']['NVCFLAGS'].format(**subs)
+    subs['NVCFLAGS'] = ma_config[ma_target]['build-config']['NVCFLAGS'].format(**subs)
 
     CMD = r'''{icon_folder}/configure \
               FCFLAGS="{FCFLAGS}" \

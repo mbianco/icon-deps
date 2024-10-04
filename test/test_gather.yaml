@@ -1,0 +1,27 @@
+# uenv-view: 'icon'
+# uenv-image: 'icon-wcp'
+
+# packages: ['icon-exclaim', 'icon4py']
+
+# icon-exclaim:
+#   folder: 'icon-exclaim'
+#   git_url: git@github.com:c2sm/icon-exclaim.git
+#   git_branch: 'main'
+
+# icon4py:
+#   folder: 'icon4y'
+#   git_url: git@github.com:c2sm/icon4py.git
+#   git_branch: 'main'
+
+uenv:
+  image: 'icon-wcp'
+  view: 'icon'
+packages:
+  icon-exclaim:
+    folder: 'icon-exclaim'
+    git_url: git@github.com:c2sm/icon-exclaim.git
+    git_branch: 'main'
+  icon4py:
+    folder: 'icon4y'
+    git_url: git@github.com:c2sm/icon4py.git
+    git_branch: 'main'

@@ -1,26 +1,18 @@
-uenv-view: 'icon'
-uenv-image: 'icon-wcp'
+uenv:
+  view: 'icon'
+  image: 'icon-wcp'
  
 paths:
-  common_prefix: '/capstor/scratch/cscs/mbianco/playground/icon-deps/' # This will be prepended to all the paths in this section (optional)
+  prefix: '/capstor/scratch/cscs/mbianco/playground/icon-deps/' # This will be prepended to all the paths in this section (optional)
   icon_folder: 'icon-exclaim'
   icon4py: 'icon4py'
 
-compilers:
-  CC: 'mpicc'
-  FC: 'mpif90'
-  CXX: 'mpicxx'
- 
-icon4py_modules:
-  # Relative paths to icon4py path above
-  dycore: 'model/atmosphere/dycore/src/icon4py/model/atmosphere/dycore/'
-  diffusion: 'model/atmosphere/diffusion/src/icon4py/model/atmosphere/diffusion/stencils'
-  advection: 'model/atmosphere/advection/src/icon4py/model/atmosphere/advection/'
-  interpolation: 'model/common/src/icon4py/model/common/interpolation/stencils'
-  tools: 'tools/src/icon4pytools'
-general:
+
+target: 'gh200'
+
+build-config:
   #CONFIGURE_FLAGS: "--disable-emvorado --disable-loop-exchange --disable-ocean --disable-rte-rrtmgp --enable-ecrad --disable-rte-rrtmgp  --enable-liskov=substitute --disable-liskov-fused --disable-mpi-checks --with-external-yaxt=no --with-external-yac=no"
-  CONFIGURE_FLAGS: "--enable-grib2 --enable-ecrad --disable-emvorado --enable-art --enable-dace --enable-acm-license --disable-aes --disable-jsbach --enable-dsl-local --disable-ocean --disable-coupling --disable-rte-rrtmgp --disable-loop-exchange --disable-async-io-rma --disable-mpi-checks --enable-liskov=verify --disable-liskov-fused"
+  CONFIGURE_FLAGS: '--enable-grib2 --enable-ecrad --disable-emvorado --enable-art --enable-dace --enable-acm-license --disable-aes --disable-jsbach --enable-dsl-local --disable-ocean --disable-coupling --disable-rte-rrtmgp --disable-loop-exchange --disable-async-io-rma --disable-mpi-checks --enable-liskov=verify --disable-liskov-fused'
   LIBS: '-Wl,--as-needed -lxml2 -llapack -lblas ${{SERIALBOX2_LIBS}} -lstdc++ -lnetcdf -lnetcdff -leccodes'
   LDFLAGS: '-L/user-environment/env/icon/lib64 -L/user-environment/env/icon/lib'
   FCFLAGS: '-g -traceback -O -Mrecursive -Mallocatable=03 -Mbackslash -Mstack_arrays ${{ECCODESI}} ${{NETCDFFI}} -D__SWAPDIM -I/user-environment/env/icon/include'
@@ -28,15 +20,4 @@ general:
   CPPFLAGS: '-I/user-environment/env/icon/include -I/user-environment/env/icon/include/libxml2' 
   GT4PYFLAGS: ''
   DSL_LDFLAGS: '-L/user-environment/env/icon/lib64 -L/user-environment/env/icon/lib'
-system:
-  CONFIGURE_FLAGS: '--enable-gpu=openacc+cuda --enable-gpu --enable-mpi-gpu --enable-realloc-buf  --disable-openmp --disable-dim-swap'
-  cudaarch: '90'
-  NVCFLAGS: '--std=c++17 -arch=sm_90 -g -O3 -lineinfo -ccbin nvc++'
-  LIBS: '-lcudart -nvmalloc'
-  LDFLAGS: ''
-  FCFLAGS: '-acc=verystrict -Minfo=accel,inline -D__USE_G2G -lnvToolsExt'
-  CFLAGS: ''
-  CPPFLAGS: '' 
-  GT4PYFLAGS: ''
-  DSL_LDFLAGS: ''
 
