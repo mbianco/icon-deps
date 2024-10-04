@@ -89,9 +89,10 @@ def config_and_build():
     check_package_path('gt4py', config, subs, common_prefix)
     check_package_path('gridtools_cpp', config, subs, common_prefix)
 
+    # Setting up the paths to the icon4py modeules. Arguably these should not be specified here, sicne icon4py should know how to build stuff
     subs['icon4py_dycore'] =  os.path.join(subs['icon4py'], 'model/atmosphere/dycore/src/icon4py/model/atmosphere/dycore/')
-    subs['icon4py_advection'] =  os.path.join(subs['icon4py'], 'model/atmosphere/diffusion/src/icon4py/model/atmosphere/diffusion/stencils')
-    subs['icon4py_diffusion'] =  os.path.join(subs['icon4py'], 'model/atmosphere/advection/src/icon4py/model/atmosphere/advection/')
+    subs['icon4py_diffusion'] =  os.path.join(subs['icon4py'], 'model/atmosphere/diffusion/src/icon4py/model/atmosphere/diffusion/stencils')
+    subs['icon4py_advection'] =  os.path.join(subs['icon4py'], 'model/atmosphere/advection/src/icon4py/model/atmosphere/advection/')
     subs['icon4py_interpolation'] =  os.path.join(subs['icon4py'], 'model/common/src/icon4py/model/common/interpolation/stencils')
     subs['icon4py_tools'] =  os.path.join(subs['icon4py'], 'tools/src/icon4pytools')
     subs['venv'] = venv_path
