@@ -1,0 +1,21 @@
+uenv:
+  view: 'icon'
+  image: 'icon-wcp'
+ 
+paths:
+  icon_folder: 'icon-exclaim'
+  icon4py: 'icon4py'
+
+
+target: 'gh200'
+
+build-config:
+  CONFIGURE_FLAGS: '--enable-grib2 --enable-ecrad --disable-emvorado --enable-art --enable-dace --enable-acm-license --disable-aes --disable-jsbach --enable-dsl-local --disable-ocean --disable-coupling --disable-rte-rrtmgp --disable-loop-exchange --disable-async-io-rma --disable-mpi-checks --enable-liskov=verify --enable-liskov-fused'
+  LIBS: '-Wl,--as-needed -lxml2 -llapack -lblas ${{SERIALBOX2_LIBS}} -lstdc++ -lnetcdf -lnetcdff -leccodes'
+  LDFLAGS: '-L/user-environment/env/icon/lib64 -L/user-environment/env/icon/lib'
+  FCFLAGS: '-g -traceback -O -Mrecursive -Mallocatable=03 -Mbackslash -Mstack_arrays ${{ECCODESI}} ${{NETCDFFI}} -D__SWAPDIM -I/user-environment/env/icon/include'
+  CFLAGS: '-g -O2 -lfyaml'
+  CPPFLAGS: '-I/user-environment/env/icon/include -I/user-environment/env/icon/include/libxml2' 
+  GT4PYFLAGS: ''
+  DSL_LDFLAGS: '-L/user-environment/env/icon/lib64 -L/user-environment/env/icon/lib'
+
