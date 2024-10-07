@@ -3,7 +3,6 @@ uenv:
   image: 'icon-wcp'
  
 paths:
-  prefix: '/capstor/scratch/cscs/mbianco/playground/icon-deps/' # This will be prepended to all the paths in this section (optional)
   icon_folder: 'icon-exclaim'
   icon4py: 'icon4py'
 
@@ -11,7 +10,6 @@ paths:
 target: 'gh200'
 
 build-config:
-  #CONFIGURE_FLAGS: "--disable-emvorado --disable-loop-exchange --disable-ocean --disable-rte-rrtmgp --enable-ecrad --disable-rte-rrtmgp  --enable-liskov=substitute --disable-liskov-fused --disable-mpi-checks --with-external-yaxt=no --with-external-yac=no"
   CONFIGURE_FLAGS: '--enable-grib2 --enable-ecrad --disable-emvorado --enable-art --enable-dace --enable-acm-license --disable-aes --disable-jsbach --enable-dsl-local --disable-ocean --disable-coupling --disable-rte-rrtmgp --disable-loop-exchange --disable-async-io-rma --disable-mpi-checks --enable-liskov=verify --disable-liskov-fused'
   LIBS: '-Wl,--as-needed -lxml2 -llapack -lblas ${{SERIALBOX2_LIBS}} -lstdc++ -lnetcdf -lnetcdff -leccodes'
   LDFLAGS: '-L/user-environment/env/icon/lib64 -L/user-environment/env/icon/lib'
