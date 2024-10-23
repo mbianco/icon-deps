@@ -20,3 +20,22 @@ gh200:
     CPPFLAGS: '' 
     GT4PYFLAGS: ''
     DSL_LDFLAGS: ''
+
+a100:
+  compilers:
+    ## These could be put there automatically since the uenv always provide the compilers
+    CC: 'mpicc'
+    FC: 'mpif90'
+    CXX: 'mpicxx'
+
+  build-config:
+    CONFIGURE_FLAGS: '--enable-gpu=openacc+cuda --enable-gpu --enable-mpi-gpu --enable-realloc-buf  --disable-openmp --disable-dim-swap'
+    cudaarch: '80'
+    NVCFLAGS: '--std=c++17 -arch=sm_80 -g -O3 -lineinfo'
+    LIBS: '-lcudart -nvmalloc'
+    LDFLAGS: ''
+    FCFLAGS: '-acc=verystrict -Minfo=accel,inline -D__USE_G2G -lnvToolsExt'
+    CFLAGS: ''
+    CPPFLAGS: '' 
+    GT4PYFLAGS: ''
+    DSL_LDFLAGS: ''

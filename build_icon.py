@@ -51,12 +51,19 @@ def config_and_build():
     #print('uenv_view', uenv_view)
 
     parser = argparse.ArgumentParser(description='Takes a YAML file with the configuration of ICON and runs the compilation')
-    parser.add_argument('file_name', type=str, help="YAML file containing the parameters for the configuration")
+    parser.add_argument('file_name', type=str, help="YAML file containing the parameters for the build configuration")
     parser.add_argument('--micro', type=str, help="YAML file containing the parameters for microarchitecture specific flags")
+    parser.add_argument('--target', type=str, help="Target atchitecture. This flag will override the target entry in the yaml build configuration. It has to be an entry in the --micro <file> target identifyier")
     parser.add_argument('--conf', action='store_true', help="Ask to not only print the configure command but also run it")
     parser.add_argument('--make', action='store_true', help="Ask to run the make commands to build the application. It requires --conf to be specified")
     parser.add_argument('--prefix', help="Common prefix where all the relative paths in the 'paths' section of the yaml configuraiton file refers to. If left blank those paths will be considered as absolute")
     args = parser.parse_args()
+
+    if not os.path.isfile(args.file_name):
+        raise Exception("Main configuration file " + args.file_name + " not found, please check the path")
+    
+    if not os.path.isfile(args.micro):
+        raise Exception("Microarchitecture configuration file " + args.micro + " not found, please check the path")
 
     print('Opening file ', args.file_name)
     config = read_config(args.file_name)
@@ -76,7 +83,9 @@ def config_and_build():
     if ma_config['uenv']['image'] != uenv_image:
         print('Warning: the image for which the configuration is done is {0}, while the environment view is {1}'.format(config['uenv-image'], uenv_image))
 
-    ma_target = config['target']
+    ma_target = config['target'] if args.target is None else args.target
+
+    print("TARGET SPECIFIED:", ma_target)
 
     pwd = os.popen('pwd').read()
     common_prefix = args.prefix
@@ -101,7 +110,7 @@ def config_and_build():
     subs['FC'] = ma_config[ma_target]['compilers'].get('FC', 'mpif90')
     subs['CC'] = ma_config[ma_target]['compilers'].get('CC', 'mpicc')
 
-    subs['cudaarch'] = ma_config[ma_target].get('cudaarch', '80')
+    subs['cudaarch'] = ma_config[ma_target].get('cudaarch', 'CRAPPPP')
 
     ## Loading general settings
     ugsf = update_general_and_system_flags(config, ma_config[ma_target])
